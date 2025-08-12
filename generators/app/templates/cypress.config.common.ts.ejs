@@ -1,0 +1,78 @@
+import dotenv from "dotenv";
+dotenv.config()
+
+import createBundler from "@bahmutov/cypress-esbuild-preprocessor";
+import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
+import createEsbuildPlugin from "@badeball/cypress-cucumber-preprocessor/esbuild";
+import Consul from "consul"
+
+import { getValueFromConsul } from "./consul/getValueFromConsul";
+import {closePool, initPool, queryDatabase} from "./cypress/support/mysqlPool";
+
+const { CONSUL_HOST, CONSUL_PORT, CONSUL_TOKEN } = process.env;
+
+if (!CONSUL_HOST || !CONSUL_PORT || !CONSUL_TOKEN) {
+  throw new Error("CONSUL_HOST, CONSUL_PORT, and CONSUL_TOKEN must be set. This error could happen because the .env file is not present in the root of the project. Please create a .env file and set the variables.");
+}
+
+const consulInstance = new Consul({
+  host: CONSUL_HOST,
+  port: parseInt(CONSUL_PORT),
+  defaults: {
+    token: CONSUL_TOKEN,  
+  },
+})
+
+const commonProperties = {
+  e2e: {
+    viewportWidth: 1920,
+    viewportHeight: 1080,
+    specPattern: "./test-definitions/**/*.auto.feature",
+    chromeWebSecurity: false,
+    numTestsKeptInMemory: 25,
+    experimentalMemoryManagement: true,
+    async setupNodeEvents(
+        on: Cypress.PluginEvents,
+        config: Cypress.PluginConfigOptions
+    ): Promise<Cypress.PluginConfigOptions> {
+      // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
+      await addCucumberPreprocessorPlugin(on, config);
+      on(
+          "file:preprocessor",
+          createBundler({
+            plugins: [createEsbuildPlugin(config)],
+          }),
+      );
+
+      const host = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/url')
+      // We need to do this in order to remove the jdbc:mysql:// prefix and the .int suffix
+      const formattedHost = host.replace(/jdbc:mysql:\/\//, '').replace(/(\.int).*$/, '$1');
+      const username = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/username')
+      const password = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/password')
+
+      const dbConfig = {
+        host: formattedHost,
+        user: username,
+        password: password,
+        database: "tradeslide",
+      };
+
+      initPool(dbConfig);
+
+      on("task", {
+        queryDb: async ({ query, params }: { query: string; params: any[] }) => {
+          return queryDatabase(query, params);
+        },
+      });
+
+      // Close the connection pool after all tests
+      on("after:run", async () => {
+        await closePool();
+      });
+
+      return config;
+    },
+  },
+};
+
+export default commonProperties;

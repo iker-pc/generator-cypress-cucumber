@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "CommonJS",
+      "rootDir": "src",
+      "outDir": "generators/app",
+      "esModuleInterop": true,
+      "strict": true,
+      "types": ["node", "yeoman-generator"]
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "generators"]
+  }
+  
