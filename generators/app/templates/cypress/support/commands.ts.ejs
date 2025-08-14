@@ -1,0 +1,14 @@
+import './commands/test';
+
+declare global {
+    namespace Cypress {
+        interface Chainable {
+            /**
+             * @description Just a simple command to test
+             * @example cy.testingCommand()
+             * @returns {boolean}
+             */
+            testingCommand: () => boolean;
+        }
+    }
+}

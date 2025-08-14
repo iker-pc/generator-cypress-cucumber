@@ -13,6 +13,8 @@
         "yeoman-generator"
     ],
     "scripts": {
+        "clean": "rimraf projects",
+        "generate": "npm run clean && npm run build && yo",
         "build": "tsc",
         "watch": "tsc --watch"
     },
@@ -23,7 +25,9 @@
         "@types/debug": "^4.1.12",
         "@types/json-schema": "^7.0.15",
         "@types/node": "^22.15.19",
+        "rimraf": "^6.0.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.8.3"
+        "typescript": "^5.8.3",
+        "yo": "^5.1.0"
     }
 }

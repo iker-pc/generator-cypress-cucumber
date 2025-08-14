@@ -12,7 +12,11 @@ const consulConnection_1 = require("./const/questions/consulConnection");
 const consulHost_1 = require("./const/questions/consulHost");
 const envConfirmQuestion_1 = require("./const/questions/envConfirmQuestion");
 const envUrlQuestion_1 = require("./const/questions/envUrlQuestion");
-class default_1 extends yeoman_generator_1.default {
+// Generator lifecycle's utils
+const consulConfiguration_1 = __importDefault(require("./lifecycles/writing/consul/consulConfiguration"));
+const testDefinitions_1 = __importDefault(require("./lifecycles/writing/test-definitions/testDefinitions"));
+const generateCypressBaseCode_1 = __importDefault(require("./lifecycles/writing/cypress/generateCypressBaseCode"));
+class MyGenerator extends yeoman_generator_1.default {
     answers = null;
     async prompting() {
         this.answers = await this.prompt([
@@ -60,39 +64,44 @@ class default_1 extends yeoman_generator_1.default {
             ...(description && { description }),
         };
         if (consulConnection) {
-            packageJson.dependencies = {
-                "consul": "^2.0.1",
-                ...(basePackageJson.dependencies || {}),
-            };
-            const envPropertiesTemplatePath = this.templatePath('.env.properties');
-            this.fs.copyTpl(envPropertiesTemplatePath, this.destinationPath('projects/.env'), {
-                consulConnection,
-                consulHost,
-                consulPort,
-                consulToken,
+            (0, consulConfiguration_1.default)(this, basePackageJson, {
+                production: {
+                    consulHost,
+                    consulPort,
+                    consulToken,
+                },
+                ...(devEnv && {
+                    development: {
+                        consulHost: devEnvConsulHost,
+                        consulPort: devEnvConsulPort,
+                        consulToken: devEnvConsulToken,
+                    }
+                }),
+                ...(preEnv && {
+                    staging: {
+                        consulHost: preEnvConsulHost,
+                        consulPort: preEnvConsulPort,
+                        consulToken: preEnvConsulToken,
+                    }
+                }),
             });
-            if (devEnv) {
-                this.fs.copyTpl(envPropertiesTemplatePath, this.destinationPath('projects/.env.dev'), {
-                    devEnvUrl,
-                    devEnvConsulHost,
-                    devEnvConsulPort,
-                    devEnvConsulToken,
-                });
-            }
-            if (preEnv) {
-                this.fs.copyTpl(envPropertiesTemplatePath, this.destinationPath('projects/.env.pre'), {
-                    preEnvUrl,
-                    preEnvConsulHost,
-                    preEnvConsulPort,
-                    preEnvConsulToken,
-                });
-            }
         }
+        this.fs.copyTpl(this.templatePath('cypress.config.common.ts.ejs'), this.destinationPath('projects/cypress.config.common.ts'), {
+            baseUrl,
+        });
         const tsConfig = this.fs.readJSON(this.templatePath('tsconfig.json'));
         const destPathTsConfig = this.destinationPath('projects/tsconfig.json');
         this.fs.writeJSON(destPathTsConfig, tsConfig);
         const destPackageJsonPath = this.destinationPath('projects/package.json');
         this.fs.writeJSON(destPackageJsonPath, packageJson);
+        (0, testDefinitions_1.default)(this);
+        (0, generateCypressBaseCode_1.default)(this);
+    }
+    install() {
+        this.spawnSync('npm', ['install'], {
+            cwd: this.destinationPath('projects'),
+            stdio: 'inherit'
+        });
     }
 }
-exports.default = default_1;
+exports.default = MyGenerator;

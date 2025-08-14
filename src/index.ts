@@ -8,7 +8,12 @@ import { consulHostQuestion } from './const/questions/consulHost';
 import { envConfirmQuestion } from './const/questions/envConfirmQuestion';
 import { envUrlQuestion } from './const/questions/envUrlQuestion';
 
-export default class extends Generator {
+// Generator lifecycle's utils
+import generateConsulConfiguration from './lifecycles/writing/consul/consulConfiguration';
+import generateTestDefinitions from './lifecycles/writing/test-definitions/testDefinitions';
+import generateCypressBaseCode from './lifecycles/writing/cypress/generateCypressBaseCode';
+
+export default class MyGenerator extends Generator {
     
   private answers: PromptAnswers | null = null;
 
@@ -79,47 +84,40 @@ export default class extends Generator {
       }
 
       if(consulConnection) {
-        packageJson.dependencies = {
-          "consul": "^2.0.1",
-          ...(basePackageJson.dependencies || {}),
-        }
-
-        const envPropertiesTemplatePath = this.templatePath('.env.properties');
-        this.fs.copyTpl(
-          envPropertiesTemplatePath,
-          this.destinationPath('projects/.env'),
-          {
-            consulConnection,
-            consulHost,
-            consulPort,
-            consulToken,
+            generateConsulConfiguration(
+            this, 
+            basePackageJson, 
+            {
+            production: {
+                consulHost,
+                consulPort,
+                consulToken,
+            },
+            ...(devEnv && {
+                development: {
+                    consulHost: devEnvConsulHost,
+                    consulPort: devEnvConsulPort,
+                    consulToken: devEnvConsulToken,
+                }
+            }),
+            ...(preEnv && {
+                staging: {
+                    consulHost: preEnvConsulHost,
+                    consulPort: preEnvConsulPort,
+                    consulToken: preEnvConsulToken,
+                }
+            }),
           }
-        );
-        if(devEnv) {
-          this.fs.copyTpl(
-            envPropertiesTemplatePath,
-            this.destinationPath('projects/.env.dev'),
-            {
-              devEnvUrl,
-              devEnvConsulHost,
-              devEnvConsulPort,
-              devEnvConsulToken,
-            }
-          );
-        }
-        if(preEnv) {
-          this.fs.copyTpl(
-            envPropertiesTemplatePath,
-            this.destinationPath('projects/.env.pre'),
-            {
-              preEnvUrl,
-              preEnvConsulHost,
-              preEnvConsulPort,
-              preEnvConsulToken,
-            }
-          );
-        }
+        )
       }
+
+      this.fs.copyTpl(
+        this.templatePath('cypress.config.common.ts.ejs'),
+        this.destinationPath('projects/cypress.config.common.ts'),
+        {
+          baseUrl,
+        }
+      );
 
       const tsConfig = this.fs.readJSON(this.templatePath('tsconfig.json'));
       const destPathTsConfig = this.destinationPath('projects/tsconfig.json');
@@ -128,6 +126,14 @@ export default class extends Generator {
       const destPackageJsonPath = this.destinationPath('projects/package.json');
       this.fs.writeJSON(destPackageJsonPath, packageJson);
 
+      generateTestDefinitions(this);
+      generateCypressBaseCode(this);
     }
 
+    install() {
+      	this.spawnSync('npm', ['install'], {
+          	cwd: this.destinationPath('projects'),
+          	stdio: 'inherit'
+      	});
+    }
 } 

@@ -1,0 +1,11 @@
+import { Given, Then } from "@badeball/cypress-cucumber-preprocessor";
+
+const BASE_URL = Cypress.env('baseUrl');
+
+Given("User navigates to base url", () => {
+    cy.visit(BASE_URL);
+});
+
+Then("Everything is ok", () => {
+    cy.expect(true).to.equal(true);
+});
