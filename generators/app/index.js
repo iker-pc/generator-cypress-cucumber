@@ -16,6 +16,7 @@ const envUrlQuestion_1 = require("./const/questions/envUrlQuestion");
 const consulConfiguration_1 = __importDefault(require("./lifecycles/writing/consul/consulConfiguration"));
 const testDefinitions_1 = __importDefault(require("./lifecycles/writing/test-definitions/testDefinitions"));
 const generateCypressBaseCode_1 = __importDefault(require("./lifecycles/writing/cypress/generateCypressBaseCode"));
+const generateEnvFiles_1 = __importDefault(require("./lifecycles/writing/env-files/generateEnvFiles"));
 class MyGenerator extends yeoman_generator_1.default {
     answers = null;
     async prompting() {
@@ -64,38 +65,36 @@ class MyGenerator extends yeoman_generator_1.default {
             ...(description && { description }),
         };
         if (consulConnection) {
-            (0, consulConfiguration_1.default)(this, basePackageJson, {
-                production: {
-                    consulHost,
-                    consulPort,
-                    consulToken,
-                },
-                ...(devEnv && {
-                    development: {
-                        consulHost: devEnvConsulHost,
-                        consulPort: devEnvConsulPort,
-                        consulToken: devEnvConsulToken,
-                    }
-                }),
-                ...(preEnv && {
-                    staging: {
-                        consulHost: preEnvConsulHost,
-                        consulPort: preEnvConsulPort,
-                        consulToken: preEnvConsulToken,
-                    }
-                }),
-            });
+            (0, consulConfiguration_1.default)(this, basePackageJson);
         }
-        this.fs.copyTpl(this.templatePath('cypress.config.common.ts.ejs'), this.destinationPath('projects/cypress.config.common.ts'), {
-            baseUrl,
-        });
         const tsConfig = this.fs.readJSON(this.templatePath('tsconfig.json'));
         const destPathTsConfig = this.destinationPath('projects/tsconfig.json');
         this.fs.writeJSON(destPathTsConfig, tsConfig);
         const destPackageJsonPath = this.destinationPath('projects/package.json');
         this.fs.writeJSON(destPackageJsonPath, packageJson);
+        (0, generateEnvFiles_1.default)(this, {
+            production: baseUrl,
+            dev: devEnvUrl,
+            pre: preEnvUrl,
+        }, {
+            production: {
+                consulHost,
+                consulPort,
+                consulToken
+            },
+            dev: {
+                consulHost: devEnvConsulHost,
+                consulPort: devEnvConsulPort,
+                consulToken: devEnvConsulToken,
+            },
+            pre: {
+                consulHost: preEnvConsulHost,
+                consulPort: preEnvConsulPort,
+                consulToken: preEnvConsulToken,
+            }
+        });
         (0, testDefinitions_1.default)(this);
-        (0, generateCypressBaseCode_1.default)(this);
+        (0, generateCypressBaseCode_1.default)(this, devEnv, preEnv, consulConnection, false);
     }
     install() {
         this.spawnSync('npm', ['install'], {

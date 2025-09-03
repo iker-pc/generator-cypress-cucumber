@@ -1,15 +1,26 @@
 import dotenv from "dotenv";
 dotenv.config()
 
+<% if (consulConnection){ %>
+  import Consul from "consul"
+<% } %>
+
 import createBundler from "@bahmutov/cypress-esbuild-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 import createEsbuildPlugin from "@badeball/cypress-cucumber-preprocessor/esbuild";
-import Consul from "consul"
 
-import { getValueFromConsul } from "./consul/getValueFromConsul";
-import {closePool, initPool, queryDatabase} from "./cypress/support/mysqlPool";
+<% if (mySqlConnection){ %>
+  import {closePool, initPool, queryDatabase} from "./cypress/support/mysqlPool";
+<% } %>
 
-const { CONSUL_HOST, CONSUL_PORT, CONSUL_TOKEN } = process.env;
+const { CONSUL_HOST, CONSUL_PORT, CONSUL_TOKEN, BASE_URL, MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env;
+
+
+if (!BASE_URL) {
+  throw new Error("BASE_URL must be set. This error could happen because the .env file is not present in the root of the project. Please create a .env file and set the variables.");
+}
+
+<% if (consulConnection){ %>
 
 if (!CONSUL_HOST || !CONSUL_PORT || !CONSUL_TOKEN) {
   throw new Error("CONSUL_HOST, CONSUL_PORT, and CONSUL_TOKEN must be set. This error could happen because the .env file is not present in the root of the project. Please create a .env file and set the variables.");
@@ -23,7 +34,12 @@ const consulInstance = new Consul({
   },
 })
 
+<% } %>
+
 const commonProperties = {
+  env: {
+    baseUrl: BASE_URL,
+  },
   e2e: {
     viewportWidth: 1920,
     viewportHeight: 1080,
@@ -44,17 +60,13 @@ const commonProperties = {
           }),
       );
 
-      const host = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/url')
-      // We need to do this in order to remove the jdbc:mysql:// prefix and the .int suffix
-      const formattedHost = host.replace(/jdbc:mysql:\/\//, '').replace(/(\.int).*$/, '$1');
-      const username = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/username')
-      const password = await getValueFromConsul(consulInstance, 'general', 'mysql/tradeslide/password')
+<% if (mySqlConnection){ %>
 
       const dbConfig = {
-        host: formattedHost,
-        user: username,
-        password: password,
-        database: "tradeslide",
+        host: MYSQL_HOST,
+        user: MYSQL_USERNAME,
+        password: MYSQL_PASSWORD,
+        database: MYSQL_DATABASE,
       };
 
       initPool(dbConfig);
@@ -64,6 +76,8 @@ const commonProperties = {
           return queryDatabase(query, params);
         },
       });
+
+<% } %>
 
       // Close the connection pool after all tests
       on("after:run", async () => {

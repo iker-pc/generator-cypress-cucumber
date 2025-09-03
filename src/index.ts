@@ -12,6 +12,7 @@ import { envUrlQuestion } from './const/questions/envUrlQuestion';
 import generateConsulConfiguration from './lifecycles/writing/consul/consulConfiguration';
 import generateTestDefinitions from './lifecycles/writing/test-definitions/testDefinitions';
 import generateCypressBaseCode from './lifecycles/writing/cypress/generateCypressBaseCode';
+import generateEnvFiles from './lifecycles/writing/env-files/generateEnvFiles';
 
 export default class MyGenerator extends Generator {
     
@@ -87,37 +88,8 @@ export default class MyGenerator extends Generator {
             generateConsulConfiguration(
             this, 
             basePackageJson, 
-            {
-            production: {
-                consulHost,
-                consulPort,
-                consulToken,
-            },
-            ...(devEnv && {
-                development: {
-                    consulHost: devEnvConsulHost,
-                    consulPort: devEnvConsulPort,
-                    consulToken: devEnvConsulToken,
-                }
-            }),
-            ...(preEnv && {
-                staging: {
-                    consulHost: preEnvConsulHost,
-                    consulPort: preEnvConsulPort,
-                    consulToken: preEnvConsulToken,
-                }
-            }),
-          }
         )
       }
-
-      this.fs.copyTpl(
-        this.templatePath('cypress.config.common.ts.ejs'),
-        this.destinationPath('projects/cypress.config.common.ts'),
-        {
-          baseUrl,
-        }
-      );
 
       const tsConfig = this.fs.readJSON(this.templatePath('tsconfig.json'));
       const destPathTsConfig = this.destinationPath('projects/tsconfig.json');
@@ -126,8 +98,31 @@ export default class MyGenerator extends Generator {
       const destPackageJsonPath = this.destinationPath('projects/package.json');
       this.fs.writeJSON(destPackageJsonPath, packageJson);
 
+      generateEnvFiles(this, 
+        {
+          production: baseUrl,
+          dev: devEnvUrl,
+          pre: preEnvUrl,
+        }, {
+          production: { 
+            consulHost, 
+            consulPort, 
+            consulToken 
+          },
+          dev: {
+            consulHost: devEnvConsulHost,
+            consulPort: devEnvConsulPort,
+            consulToken: devEnvConsulToken,
+          },
+          pre: {
+            consulHost: preEnvConsulHost,
+            consulPort: preEnvConsulPort,
+            consulToken: preEnvConsulToken,
+          }
+      });
       generateTestDefinitions(this);
-      generateCypressBaseCode(this);
+      generateCypressBaseCode(this, devEnv, preEnv, consulConnection, false);
+
     }
 
     install() {

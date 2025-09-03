@@ -3,9 +3,9 @@
     "version": "0.1.0",
     "type": "commonjs",
     "scripts": {
-      "cy:open:local": "dotenv -e .env.local -- cypress open --config-file cypress.config.local.ts",
-      "cy:open:devel": "dotenv -e .env.devel -- cypress open --config-file cypress.config.dev.ts",
-      "cy:open:pre": "dotenv -e .env.predx -- cypress open --config-file cypress.config.pre.ts"
+      "cy:open": "dotenv -e .env.properties -- cypress open --config-file cypress.config.prod.ts",
+      "cy:open:devel": "dotenv -e .env.dev.properties -- cypress open --config-file cypress.config.dev.ts",
+      "cy:open:pre": "dotenv -e .env.pre.properties -- cypress open --config-file cypress.config.pre.ts"
     },
     "devDependencies": {
       "@badeball/cypress-cucumber-preprocessor": "^22.0.1",

@@ -1,0 +1,11 @@
+import { defineConfig } from "cypress";
+
+import commonProperties from "./cypress.config.common";
+
+export default defineConfig({
+    ...commonProperties,
+    env: {
+        name: 'prod',
+        ...commonProperties.env,
+    },
+});
