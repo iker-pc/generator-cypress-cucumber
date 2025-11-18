@@ -1,4 +1,5 @@
 import Generator, { PromptAnswers } from 'yeoman-generator';
+
 import { nameQuestion } from './const/questions/name';
 import { descriptionConfirmQuestion } from './const/questions/descriptionConfirm';
 import { descriptionQuestion } from './const/questions/description';
@@ -19,6 +20,7 @@ export default class MyGenerator extends Generator {
   private answers: PromptAnswers | null = null;
 
   async prompting() {
+    
       this.answers = await this.prompt([
           nameQuestion,
           descriptionConfirmQuestion,
@@ -57,6 +59,7 @@ export default class MyGenerator extends Generator {
       if(!this.answers) {
         return;
       }
+
       const { 
         name, 
         description, 
@@ -78,6 +81,7 @@ export default class MyGenerator extends Generator {
       } = this.answers;
       
       const basePackageJson = this.fs.readJSON(this.templatePath('package.json'));
+
       const packageJson = {
         ...basePackageJson,
         name,
