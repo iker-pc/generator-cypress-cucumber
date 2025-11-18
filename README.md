@@ -23,7 +23,6 @@ A Yeoman generator that scaffolds an end-to-end testing project using Cypress wi
 
 ```bash
 npm install
-npm run generate
 ```
 ## 📖 Usage
 
@@ -97,10 +96,10 @@ Once the project is generated, in the `projects/` folder you can use:
 
 ### Environment Variables
 
-The generator creates `.env.properties` files for each environment:
-- `.env.properties` (production)
-- `.env.dev.properties` (development)
-- `.env.pre.properties` (pre-production)
+The generator creates `.env` properties files for each environment:
+- `.env` (production)
+- `.env.dev` (development)
+- `.env.pre` (pre-production)
 
 These files contain:
 - Environment URLs
