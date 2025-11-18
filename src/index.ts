@@ -5,7 +5,7 @@ import { descriptionConfirmQuestion } from './const/questions/descriptionConfirm
 import { descriptionQuestion } from './const/questions/description';
 import { baseUrlQuestion } from './const/questions/baseUrl';
 import { consulConnectionQuestion } from './const/questions/consulConnection';
-import { consulHostQuestion } from './const/questions/consulHost';
+import { consulHostQuestion, consulPortQuestion, consulTokenQuestion } from './const/questions/consulHost';
 import { envConfirmQuestion } from './const/questions/envConfirmQuestion';
 import { envUrlQuestion } from './const/questions/envUrlQuestion';
 
@@ -34,6 +34,14 @@ export default class MyGenerator extends Generator {
             ...consulHostQuestion('prod'),
             when: (answers) => answers.consulConnection,
           },
+          {
+            ...consulPortQuestion('prod'),
+            when: (answers) => answers.consulConnection,
+          },
+          {
+            ...consulTokenQuestion('prod'),
+            when: (answers) => answers.consulConnection,
+          },
           envConfirmQuestion('dev'),
           {
             ...envUrlQuestion('dev'),
@@ -43,6 +51,14 @@ export default class MyGenerator extends Generator {
             ...consulHostQuestion('dev'),
             when: (answers) => answers.devEnv && answers.consulConnection,
           },
+          {
+            ...consulPortQuestion('dev'),
+            when: (answers) => answers.devEnv && answers.consulConnection,
+          },
+          {
+            ...consulTokenQuestion('dev'),
+            when: (answers) => answers.devEnv && answers.consulConnection,
+          },
           envConfirmQuestion('pre'),
           {
             ...envUrlQuestion('pre'),
@@ -50,6 +66,14 @@ export default class MyGenerator extends Generator {
           },
           {
             ...consulHostQuestion('pre'),
+            when: (answers) => answers.preEnv && answers.consulConnection,
+          },
+          {
+            ...consulPortQuestion('pre'),
+            when: (answers) => answers.preEnv && answers.consulConnection,
+          },
+          {
+            ...consulTokenQuestion('pre'),
             when: (answers) => answers.preEnv && answers.consulConnection,
           },
       ]);
