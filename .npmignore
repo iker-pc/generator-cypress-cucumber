@@ -1,8 +1,9 @@
 /node_modules
 /projects
-/generators/app/const
-/generators/app/types
-/generators/app/lifecycles
-/generators/app/index.js
+/src
+
+/tsconfig.json
+
+/.gitignore
 
 package-lock.json
