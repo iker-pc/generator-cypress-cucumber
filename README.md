@@ -14,24 +14,17 @@ A Yeoman generator that scaffolds an end-to-end testing project using Cypress wi
 
 ## 🚀 Installation
 
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- npm or yarn
-
-### Generator Installation
-
 ```bash
-npm install
+npm install -g yo
+npm install -g generator-cypress-cucumber
+npm install -g npm
 ```
 ## 📖 Usage
 
-### Generate a New Project
-
-Run the generator with Yeoman:
+Run the generator using the 'yo' command
 
 ```bash
-npm run generate
+yo cypress-cucumber
 ```
 The generator will ask you a series of questions:
 
@@ -133,25 +126,6 @@ If you enable Consul integration during generation, the project will include:
 - Consul connection configuration for each environment
 - `ConsulManager` class to manage the connection
 - Environment variables for Consul host, port, and token
-
-## 🏗️ Development
-
-### Source Code Structure
-
-```
-src/
-├── const/
-│   └── questions/          # Generator questions
-├── lifecycles/
-│   └── writing/            # File generation logic
-│       ├── consul/         # Consul configuration generation
-│       ├── cypress/        # Cypress code generation
-│       ├── env-files/      # .env files generation
-│       └── test-definitions/ # Feature files generation
-├── types/                  # TypeScript type definitions
-└── index.ts                # Generator entry point
-```
-
 
 ## 📞 Support
 
