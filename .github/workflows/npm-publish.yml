@@ -24,6 +24,7 @@ jobs:
           if [ "v$PKG_VER" != "$TAG" ]; then
             echo "Tag ($TAG) no coincide con package.json ($PKG_VER)"; exit 1
           fi
+      - run: npm run build
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
