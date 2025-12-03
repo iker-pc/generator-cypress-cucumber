@@ -1,7 +1,7 @@
 {
     "name": "generator-cypress-cucumber",
     "private": false,
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "A Yeoman generator that scaffolds an end-to-end testing project using Cypress with Cucumber-style Gherkin syntax. It sets up a clean testing environment with predefined folder structure, step definitions, example feature files, and basic configuration.",
     "author": {
         "name": "Iker Pérez",
