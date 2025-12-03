@@ -4,5 +4,3 @@
 /generators/app/types
 /generators/app/lifecycles
 /generators/app/index.js
-
-package-lock.json
