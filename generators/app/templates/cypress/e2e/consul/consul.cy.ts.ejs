@@ -1,0 +1,12 @@
+import { Given, Then } from "@badeball/cypress-cucumber-preprocessor";
+
+Given("We try to get variable from consul", () => {
+    // 'folder' and 'key' must be substituted for some real values from your consul
+    cy.task('getValueFromConsul', { folder: 'general', key: 'example' }).then((value) => {
+        cy.wrap(value).as('consulValue');
+    });
+});
+
+Then("consul variable is properly get", () => {
+    cy.get('@consulValue').should('not.be.null');
+});

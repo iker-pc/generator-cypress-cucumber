@@ -110,6 +110,10 @@ export default class MyGenerator extends Generator {
         ...basePackageJson,
         name,
         ...(description && { description }),
+        devDependencies: {
+          ...basePackageJson.devDependencies,
+          ...(consulConnection && { "consul": "^2.0.1" }),
+        },
       }
 
       if(consulConnection) {
@@ -148,7 +152,7 @@ export default class MyGenerator extends Generator {
             consulToken: preEnvConsulToken,
           }
       });
-      generateTestDefinitions(this);
+      generateTestDefinitions(this, consulConnection);
       generateCypressBaseCode(this, devEnv, preEnv, consulConnection, false);
 
     }
