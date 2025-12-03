@@ -19,7 +19,7 @@ const generateCypressBaseCode = (generator: Generator, devEnv: boolean, preEnv: 
 
     if (devEnv) {
         generator.fs.copyTpl(
-        generator.templatePath('cypress.config.dev.ts.ejs'),
+            generator.templatePath('cypress.config.dev.ts.ejs'),
             generator.destinationPath('projects/cypress.config.dev.ts'),
         );
     }
@@ -35,10 +35,15 @@ const generateCypressBaseCode = (generator: Generator, devEnv: boolean, preEnv: 
 
     cypressFiles.forEach(file => {
         const relative = file.replace(generator.templatePath(), "");
-        const target = relative.replace(/\.ts\.ejs$/, ".ts");
-        generator.fs.copy(
-            file, 
-            generator.destinationPath(`projects/${target}`));
+        if(!relative.includes('consul') || 
+            (consulConnection && relative.includes('consul'))) 
+        {
+            const target = relative.replace(/\.ts\.ejs$/, ".ts");
+            generator.fs.copy(
+                file, 
+                generator.destinationPath(`projects/${target}`)
+            );
+        }
     });
 
 }

@@ -1,39 +1,26 @@
 import dotenv from "dotenv";
-dotenv.config()
-
-<% if (consulConnection){ %>
-  import Consul from "consul"
-<% } %>
+dotenv.config();
 
 import createBundler from "@bahmutov/cypress-esbuild-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 import createEsbuildPlugin from "@badeball/cypress-cucumber-preprocessor/esbuild";
-
+<% if (consulConnection){ %>
+import { ConsulManager } from "./consul/ConsulManager";
+<% } %>
 <% if (mySqlConnection){ %>
-  import {closePool, initPool, queryDatabase} from "./cypress/support/mysqlPool";
+import {closePool, initPool, queryDatabase} from "./cypress/support/mysqlPool";
+import { ConsulManager } from "./consul/ConsulManager";
 <% } %>
 
 const { CONSUL_HOST, CONSUL_PORT, CONSUL_TOKEN, BASE_URL, MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env;
-
-
 if (!BASE_URL) {
   throw new Error("BASE_URL must be set. This error could happen because the .env file is not present in the root of the project. Please create a .env file and set the variables.");
 }
 
 <% if (consulConnection){ %>
-
 if (!CONSUL_HOST || !CONSUL_PORT || !CONSUL_TOKEN) {
   throw new Error("CONSUL_HOST, CONSUL_PORT, and CONSUL_TOKEN must be set. This error could happen because the .env file is not present in the root of the project. Please create a .env file and set the variables.");
 }
-
-const consulInstance = new Consul({
-  host: CONSUL_HOST,
-  port: parseInt(CONSUL_PORT),
-  defaults: {
-    token: CONSUL_TOKEN,  
-  },
-})
-
 <% } %>
 
 const commonProperties = {
@@ -51,7 +38,6 @@ const commonProperties = {
         on: Cypress.PluginEvents,
         config: Cypress.PluginConfigOptions
     ): Promise<Cypress.PluginConfigOptions> {
-      // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
       await addCucumberPreprocessorPlugin(on, config);
       on(
           "file:preprocessor",
@@ -59,31 +45,34 @@ const commonProperties = {
             plugins: [createEsbuildPlugin(config)],
           }),
       );
-
-<% if (mySqlConnection){ %>
-
+    <% if (consulConnection){ %>
+      const consulInstance = new ConsulManager(CONSUL_HOST, CONSUL_PORT, CONSUL_TOKEN);
+      on("task", {
+        getValueFromConsul: async ({ folder, key }: { folder: string; key: string }): Promise<string | null> => {
+          return consulInstance.getValue(folder, key);
+        },
+      });  
+    <% } %>
+    <% if (mySqlConnection){ %>
       const dbConfig = {
         host: MYSQL_HOST,
         user: MYSQL_USERNAME,
         password: MYSQL_PASSWORD,
         database: MYSQL_DATABASE,
       };
-
       initPool(dbConfig);
-
       on("task", {
         queryDb: async ({ query, params }: { query: string; params: any[] }) => {
           return queryDatabase(query, params);
         },
       });
 
-<% } %>
 
       // Close the connection pool after all tests
       on("after:run", async () => {
-        await closePool();
+        await mysqlManager.closePool();
       });
-
+    <% } %>
       return config;
     },
   },
